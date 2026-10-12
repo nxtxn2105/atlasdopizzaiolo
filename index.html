@@ -363,12 +363,12 @@
       <button id="promoClose" class="promo-close" aria-label="Fechar">&times;</button>
       
       <span class="promo-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        CONDIÇÃO EXCLUSIVA DE ENTRADA
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        ESPERE! NÃO VÁ EMBORA DE MÃOS VAZIAS
       </span>
 
-      <h3>Espere! Você ganhou<br><span>10% DE DESCONTO</span></h3>
-      <p>Cupom especial liberado para novos alunos garantirem o <strong>Atlas Visual do Pizzaiolo</strong> agora mesmo.</p>
+      <h3>Antes de sair, garanta<br><span>10% DE DESCONTO</span></h3>
+      <p>Liberamos um cupom especial de saída para você garantir o <strong>Atlas Visual do Pizzaiolo</strong> com valor exclusivo agora mesmo.</p>
 
       <!-- Caixa com o Cupom -->
       <div class="promo-coupon-box">
@@ -425,11 +425,8 @@
       const toast = document.getElementById('couponToast');
       const countdownEl = document.getElementById('promoCountdown');
 
-      // Verifica se o popup já foi dispensado nesta sessão de navegação
-      const isDismissed = sessionStorage.getItem('atlas_promo_dismissed');
-
       function openModal() {
-        if (overlay && !overlay.classList.contains('is-active')) {
+        if (overlay && !overlay.classList.contains('is-active') && !sessionStorage.getItem('atlas_promo_dismissed')) {
           overlay.classList.add('is-active');
           overlay.setAttribute('aria-hidden', 'false');
           startTimer();
@@ -492,19 +489,35 @@
         }
       }
 
-      // Abre automaticamente após 2.8 segundos da pessoa entrar na página
-      if (!isDismissed) {
-        setTimeout(openModal, 2800);
-      }
-
-      // Exit-intent no desktop (se o mouse for para o topo da janela antes de abrir)
+      // ========================================================
+      // EXIT-INTENT PURO: Dispara quando a pessoa tenta sair da tela
+      // ========================================================
       let exitFired = false;
-      document.addEventListener('mouseleave', function(e) {
-        if (e.clientY <= 10 && !isDismissed && !exitFired && !overlay.classList.contains('is-active')) {
+
+      function triggerExitIntent() {
+        if (!exitFired && !sessionStorage.getItem('atlas_promo_dismissed')) {
           exitFired = true;
           openModal();
         }
+      }
+
+      // 1. DESKTOP: Dispara quando o mouse se move em direção ao topo da janela (fechar aba / trocar URL)
+      document.addEventListener('mouseleave', function(e) {
+        if (e.clientY <= 25) {
+          triggerExitIntent();
+        }
       });
+
+      // 2. MOBILE: Intercepta o botão "Voltar" do navegador (Salvamento de Tráfego Mobile)
+      try {
+        window.history.pushState({ page: 'atlas_offer' }, '', '');
+        window.addEventListener('popstate', function(e) {
+          if (!sessionStorage.getItem('atlas_promo_dismissed') && !exitFired) {
+            triggerExitIntent();
+            window.history.pushState({ page: 'atlas_offer' }, '', '');
+          }
+        });
+      } catch (err) {}
 
       // Fechar no botão X
       if (closeBtn) {
