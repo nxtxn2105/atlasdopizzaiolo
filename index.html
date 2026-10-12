@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Atlas Visual do Pizzaiolo — +100 Mapas de Montagem de Pizzas</title>
+  <meta name="description" content="Um material visual e direto para quem está começando ou já trabalha como pizzaiolo e quer consultar, entender e executar diferentes montagens de pizza de forma muito mais prática">
+  <meta name="theme-color" content="#C5241A">
+  <link rel="preload" href="fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="preload" href="fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin="">
+  <script type="module" src="js/index-DNWL92KJ.js"></script>
+  <link rel="stylesheet" crossorigin="" href="css/index-1fLfzhHh.css">
+
+  <style>
+    /* ===================================================
+       POPUP DE PROMOÇÃO / DESCONTO 10% (CRO & RESPOSTA DIRETA)
+       =================================================== */
+    .promo-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: rgba(15, 12, 10, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1), visibility 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .promo-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .promo-card {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      background: linear-gradient(165deg, #221f1d 0%, #161413 100%);
+      border: 2px solid #d99a37;
+      border-radius: 24px;
+      padding: 34px 28px 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(217, 154, 55, 0.25);
+      color: #fff;
+      text-align: center;
+      transform: scale(0.92) translateY(16px);
+      transition: transform 320ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .promo-overlay.is-active .promo-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .promo-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #bbb;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+
+    .promo-close:hover {
+      background: rgba(197, 36, 26, 0.8);
+      color: #fff;
+      transform: rotate(90deg);
+    }
+
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #d99a37 0%, #f3ba5d 100%);
+      color: #1a140b;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      box-shadow: 0 6px 16px rgba(217, 154, 55, 0.35);
+      margin-bottom: 16px;
+      animation: pulse-badge 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .promo-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.55rem;
+      font-weight: 700;
+      line-height: 1.22;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .promo-card h3 span {
+      color: #f3ba5d;
+      text-decoration: underline decoration-color 3px;
+      text-underline-offset: 4px;
+    }
+
+    .promo-card p {
+      margin: 0 0 20px;
+      font-size: 0.86rem;
+      color: rgba(255, 255, 255, 0.76);
+      line-height: 1.5;
+    }
+
+    /* Caixa do Cupom */
+    .promo-coupon-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px dashed #d99a37;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .promo-coupon-info {
+      text-align: left;
+    }
+
+    .promo-coupon-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #d99a37;
+      font-weight: 700;
+      display: block;
+    }
+
+    .promo-coupon-code {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #fff;
+      font-family: monospace;
+    }
+
+    .promo-coupon-copy-btn {
+      background: rgba(217, 154, 55, 0.2);
+      border: 1px solid rgba(217, 154, 55, 0.5);
+      color: #f3ba5d;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 180ms ease;
+      white-space: nowrap;
+    }
+
+    .promo-coupon-copy-btn:hover {
+      background: #d99a37;
+      color: #1a140b;
+    }
+
+    .promo-coupon-copy-btn.is-copied {
+      background: #27ae60;
+      border-color: #27ae60;
+      color: #fff;
+    }
+
+    /* Timer Regressivo */
+    .promo-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      color: #fca5a5;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .promo-timer-digits {
+      background: rgba(197, 36, 26, 0.25);
+      border: 1px solid rgba(197, 36, 26, 0.45);
+      color: #ff6b6b;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    /* Botão CTA Principal */
+    .promo-cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: linear-gradient(135deg, #c5241a 0%, #e5392d 100%);
+      color: #fff;
+      border: none;
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(197, 36, 26, 0.45);
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    }
+
+    .promo-cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(197, 36, 26, 0.6);
+      filter: brightness(1.05);
+    }
+
+    .promo-cta-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 180ms ease;
+    }
+
+    .promo-cta-btn:hover svg {
+      transform: translateX(4px);
+    }
+
+    /* Opção secundária */
+    .promo-secondary-link {
+      display: inline-block;
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.74rem;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 180ms ease;
+    }
+
+    .promo-secondary-link:hover {
+      color: #fff;
+    }
+
+    .promo-security {
+      margin-top: 16px !important;
+      margin-bottom: 0 !important;
+      font-size: 0.68rem !important;
+      color: rgba(255, 255, 255, 0.4) !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .promo-card {
+        padding: 28px 20px 22px;
+        border-radius: 20px;
+      }
+      .promo-card h3 {
+        font-size: 1.35rem;
+      }
+      .promo-cta-btn {
+        font-size: 0.82rem;
+        padding: 14px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- MODAL DE PROMOÇÃO 10% DE DESCONTO -->
+  <div id="promoOverlay" class="promo-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="promo-card">
+      <button id="promoClose" class="promo-close" aria-label="Fechar">&times;</button>
+      
+      <span class="promo-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        CONDIÇÃO EXCLUSIVA DE ENTRADA
+      </span>
+
+      <h3>Espere! Você ganhou<br><span>10% DE DESCONTO</span></h3>
+      <p>Cupom especial liberado para novos alunos garantirem o <strong>Atlas Visual do Pizzaiolo</strong> agora mesmo.</p>
+
+      <!-- Caixa com o Cupom -->
+      <div class="promo-coupon-box">
+        <div class="promo-coupon-info">
+          <span class="promo-coupon-label">SEU CUPOM DE 10% OFF</span>
+          <span id="promoCode" class="promo-coupon-code">PIZZA10</span>
+        </div>
+        <button id="promoCopyBtn" class="promo-coupon-copy-btn" title="Copiar cupom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span id="promoCopyText">COPIAR</span>
+        </button>
+      </div>
+
+      <!-- Timer de Escassez -->
+      <div class="promo-timer">
+        <span>Oferta expira em:</span>
+        <span id="promoCountdown" class="promo-timer-digits">09:59</span>
+      </div>
+
+      <!-- Botão CTA Principal -->
+      <a id="promoCtaBtn" class="promo-cta-btn" href="https://pay.lowify.com.br/checkout.php?product_id=JMhcrx&cupom=PIZZA10" target="_blank" rel="noopener noreferrer">
+        APROVEITAR 10% DE DESCONTO
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+      </a>
+
+      <!-- Link secundário para escolher plano -->
+      <div>
+        <a id="promoScrollPlans" class="promo-secondary-link">Quero ver todos os planos disponíveis</a>
+      </div>
+
+      <p class="promo-security">
+        <span>🔒 Pagamento 100% Seguro</span>
+        <span>⚡ Acesso Imediato</span>
+        <span>🛡️ 7 Dias de Garantia</span>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const overlay = document.getElementById('promoOverlay');
+      const closeBtn = document.getElementById('promoClose');
+      const copyBtn = document.getElementById('promoCopyBtn');
+      const copyText = document.getElementById('promoCopyText');
+      const promoCode = document.getElementById('promoCode').innerText.trim();
+      const scrollPlans = document.getElementById('promoScrollPlans');
+      const countdownEl = document.getElementById('promoCountdown');
+
+      // Verifica se o popup já foi dispensado nesta sessão de navegação
+      const isDismissed = sessionStorage.getItem('atlas_promo_dismissed');
+
+      function openModal() {
+        if (overlay && !overlay.classList.contains('is-active')) {
+          overlay.classList.add('is-active');
+          overlay.setAttribute('aria-hidden', 'false');
+          startTimer();
+        }
+      }
+
+      function closeModal() {
+        if (overlay) {
+          overlay.classList.remove('is-active');
+          overlay.setAttribute('aria-hidden', 'true');
+          sessionStorage.setItem('atlas_promo_dismissed', '1');
+        }
+      }
+
+      // Abre automaticamente após 2.8 segundos da pessoa entrar na página
+      if (!isDismissed) {
+        setTimeout(openModal, 2800);
+      }
+
+      // Exit-intent no desktop (se o mouse for para o topo da janela antes de abrir)
+      let exitFired = false;
+      document.addEventListener('mouseleave', function(e) {
+        if (e.clientY <= 10 && !isDismissed && !exitFired && !overlay.classList.contains('is-active')) {
+          exitFired = true;
+          openModal();
+        }
+      });
+
+      // Fechar no botão X
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+      }
+
+      // Fechar clicando no fundo escuro
+      if (overlay) {
+        overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) closeModal();
+        });
+      }
+
+      // Fechar no ESC
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('is-active')) {
+          closeModal();
+        }
+      });
+
+      // Copiar cupom com feedback visual
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+          navigator.clipboard.writeText(promoCode).then(function() {
+            copyBtn.classList.add('is-copied');
+            copyText.textContent = 'COPIADO! ✓';
+            setTimeout(function() {
+              copyBtn.classList.remove('is-copied');
+              copyText.textContent = 'COPIAR';
+            }, 2500);
+          }).catch(function() {
+            // Fallback simples
+            const ta = document.createElement('textarea');
+            ta.value = promoCode;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            copyBtn.classList.add('is-copied');
+            copyText.textContent = 'COPIADO! ✓';
+            setTimeout(function() {
+              copyBtn.classList.remove('is-copied');
+              copyText.textContent = 'COPIAR';
+            }, 2500);
+          });
+        });
+      }
+
+      // Link secundário: rola até os planos e copia o cupom
+      if (scrollPlans) {
+        scrollPlans.addEventListener('click', function() {
+          closeModal();
+          // Copia o cupom para o usuário ter em mãos
+          try { navigator.clipboard.writeText(promoCode); } catch(err) {}
+          const target = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      // Timer regressivo (10 minutos)
+      let secondsRemaining = 599; // 09:59
+      let timerInterval = null;
+
+      function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(function() {
+          if (secondsRemaining <= 0) {
+            clearInterval(timerInterval);
+            if (countdownEl) countdownEl.textContent = '00:00';
+            return;
+          }
+          secondsRemaining--;
+          const mins = Math.floor(secondsRemaining / 60);
+          const secs = secondsRemaining % 60;
+          if (countdownEl) {
+            countdownEl.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+          }
+        }, 1000);
+      }
+    })();
+  </script>
+</body>
+</html>
