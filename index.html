@@ -293,6 +293,45 @@
       gap: 12px;
     }
 
+    /* Toast flutuante de confirmação */
+    .coupon-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      z-index: 9999999;
+      background: #1e1b18;
+      border: 1.5px solid #d99a37;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 100px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 320ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 250ms ease;
+      white-space: nowrap;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .coupon-toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .coupon-toast .badge {
+      background: #27ae60;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 100px;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
     @media (max-width: 480px) {
       .promo-card {
         padding: 28px 20px 22px;
@@ -304,6 +343,13 @@
       .promo-cta-btn {
         font-size: 0.82rem;
         padding: 14px 16px;
+      }
+      .coupon-toast {
+        width: min(92%, 360px);
+        white-space: normal;
+        font-size: 0.75rem;
+        border-radius: 16px;
+        bottom: 16px;
       }
     }
   </style>
@@ -342,15 +388,15 @@
         <span id="promoCountdown" class="promo-timer-digits">09:59</span>
       </div>
 
-      <!-- Botão CTA Principal -->
-      <a id="promoCtaBtn" class="promo-cta-btn" href="https://pay.lowify.com.br/checkout.php?product_id=JMhcrx&cupom=PIZZA10" target="_blank" rel="noopener noreferrer">
-        APROVEITAR 10% DE DESCONTO
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-      </a>
+      <!-- Botão CTA Principal: Copia o cupom, fecha o modal e rola até os planos -->
+      <button type="button" id="promoCtaBtn" class="promo-cta-btn">
+        COPIAR CUPOM E ESCOLHER PLANO
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>
+      </button>
 
-      <!-- Link secundário para escolher plano -->
+      <!-- Opção secundária para fechar -->
       <div>
-        <a id="promoScrollPlans" class="promo-secondary-link">Quero ver todos os planos disponíveis</a>
+        <button type="button" id="promoDismissBtn" class="promo-secondary-link" style="background:none;border:none;cursor:pointer;">Não quero desconto, continuar lendo</button>
       </div>
 
       <p class="promo-security">
@@ -361,6 +407,12 @@
     </div>
   </div>
 
+  <!-- Toast flutuante de confirmação -->
+  <div id="couponToast" class="coupon-toast" role="status" aria-live="polite">
+    <span class="badge">COPIADO! ✓</span>
+    <span>Cupom <strong>PIZZA10</strong> pronto! Escolha seu plano abaixo:</span>
+  </div>
+
   <script>
     (function() {
       const overlay = document.getElementById('promoOverlay');
@@ -368,7 +420,9 @@
       const copyBtn = document.getElementById('promoCopyBtn');
       const copyText = document.getElementById('promoCopyText');
       const promoCode = document.getElementById('promoCode').innerText.trim();
-      const scrollPlans = document.getElementById('promoScrollPlans');
+      const ctaBtn = document.getElementById('promoCtaBtn');
+      const dismissBtn = document.getElementById('promoDismissBtn');
+      const toast = document.getElementById('couponToast');
       const countdownEl = document.getElementById('promoCountdown');
 
       // Verifica se o popup já foi dispensado nesta sessão de navegação
@@ -387,6 +441,54 @@
           overlay.classList.remove('is-active');
           overlay.setAttribute('aria-hidden', 'true');
           sessionStorage.setItem('atlas_promo_dismissed', '1');
+        }
+      }
+
+      // Função central: copia o código, fecha o modal e rola suavemente até a seção dos planos
+      function copyCodeAndGoToPlans() {
+        // 1. Copia o código para a área de transferência
+        try {
+          navigator.clipboard.writeText(promoCode);
+        } catch(e) {
+          const ta = document.createElement('textarea');
+          ta.value = promoCode;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+
+        // 2. Feedback visual no botão da caixinha
+        if (copyBtn) {
+          copyBtn.classList.add('is-copied');
+          if (copyText) copyText.textContent = 'COPIADO! ✓';
+        }
+
+        // 3. Fecha o modal
+        closeModal();
+
+        // 4. Exibe o toast flutuante de confirmação
+        if (toast) {
+          toast.classList.add('is-visible');
+          setTimeout(function() {
+            toast.classList.remove('is-visible');
+          }, 4500);
+        }
+
+        // 5. Rola suavemente até a seção dos planos (sem sair da página)
+        setTimeout(function() {
+          const target = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 140);
+
+        // 6. Rastreia evento no Meta Pixel
+        if (typeof fbq === 'function') {
+          fbq('trackCustom', 'CouponCopied', {
+            coupon: promoCode,
+            discount: '10%'
+          });
         }
       }
 
@@ -409,6 +511,11 @@
         closeBtn.addEventListener('click', closeModal);
       }
 
+      // Fechar no link de dispensar
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', closeModal);
+      }
+
       // Fechar clicando no fundo escuro
       if (overlay) {
         overlay.addEventListener('click', function(e) {
@@ -423,45 +530,14 @@
         }
       });
 
-      // Copiar cupom com feedback visual
-      if (copyBtn) {
-        copyBtn.addEventListener('click', function() {
-          navigator.clipboard.writeText(promoCode).then(function() {
-            copyBtn.classList.add('is-copied');
-            copyText.textContent = 'COPIADO! ✓';
-            setTimeout(function() {
-              copyBtn.classList.remove('is-copied');
-              copyText.textContent = 'COPIAR';
-            }, 2500);
-          }).catch(function() {
-            // Fallback simples
-            const ta = document.createElement('textarea');
-            ta.value = promoCode;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            copyBtn.classList.add('is-copied');
-            copyText.textContent = 'COPIADO! ✓';
-            setTimeout(function() {
-              copyBtn.classList.remove('is-copied');
-              copyText.textContent = 'COPIAR';
-            }, 2500);
-          });
-        });
+      // Clique no botão CTA Principal do popup
+      if (ctaBtn) {
+        ctaBtn.addEventListener('click', copyCodeAndGoToPlans);
       }
 
-      // Link secundário: rola até os planos e copia o cupom
-      if (scrollPlans) {
-        scrollPlans.addEventListener('click', function() {
-          closeModal();
-          // Copia o cupom para o usuário ter em mãos
-          try { navigator.clipboard.writeText(promoCode); } catch(err) {}
-          const target = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-          }
-        });
+      // Clique no botão Copiar dentro da caixa do cupom
+      if (copyBtn) {
+        copyBtn.addEventListener('click', copyCodeAndGoToPlans);
       }
 
       // Timer regressivo (10 minutos)
@@ -485,19 +561,7 @@
         }, 1000);
       }
 
-      // Rastrear evento de InitiateCheckout do Meta Pixel
-      const ctaBtn = document.getElementById('promoCtaBtn');
-      if (ctaBtn) {
-        ctaBtn.addEventListener('click', function() {
-          if (typeof fbq === 'function') {
-            fbq('track', 'InitiateCheckout', {
-              content_name: 'Atlas Visual do Pizzaiolo - Completo 10% OFF',
-              currency: 'BRL'
-            });
-          }
-        });
-      }
-
+      // Rastrear InitiateCheckout nos links de compra da Lowify ao clicar na tabela de planos
       document.addEventListener('click', function(e) {
         const link = e.target.closest('a[href*="pay.lowify.com.br"]');
         if (link && typeof fbq === 'function') {
