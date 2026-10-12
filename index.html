@@ -6,6 +6,24 @@
   <title>Atlas Visual do Pizzaiolo — +100 Mapas de Montagem de Pizzas</title>
   <meta name="description" content="Um material visual e direto para quem está começando ou já trabalha como pizzaiolo e quer consultar, entender e executar diferentes montagens de pizza de forma muito mais prática">
   <meta name="theme-color" content="#C5241A">
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1751702309218947');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1751702309218947&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
+
   <link rel="preload" href="fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="preload" href="fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin="">
   <script type="module" src="js/index-DNWL92KJ.js"></script>
@@ -466,6 +484,29 @@
           }
         }, 1000);
       }
+
+      // Rastrear evento de InitiateCheckout do Meta Pixel
+      const ctaBtn = document.getElementById('promoCtaBtn');
+      if (ctaBtn) {
+        ctaBtn.addEventListener('click', function() {
+          if (typeof fbq === 'function') {
+            fbq('track', 'InitiateCheckout', {
+              content_name: 'Atlas Visual do Pizzaiolo - Completo 10% OFF',
+              currency: 'BRL'
+            });
+          }
+        });
+      }
+
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href*="pay.lowify.com.br"]');
+        if (link && typeof fbq === 'function') {
+          fbq('track', 'InitiateCheckout', {
+            content_name: 'Atlas Visual do Pizzaiolo',
+            currency: 'BRL'
+          });
+        }
+      });
     })();
   </script>
 </body>
