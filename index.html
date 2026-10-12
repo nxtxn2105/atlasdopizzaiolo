@@ -26,7 +26,7 @@
 
   <link rel="preload" href="fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="preload" href="fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin="">
-  <script type="module" src="js/index-DNWL92KJ.js?v=2"></script>
+  <script type="module" src="js/index-DNWL92KJ.js?v=3"></script>
   <link rel="stylesheet" crossorigin="" href="css/index-1fLfzhHh.css">
 
   <style>
@@ -489,35 +489,85 @@
         }
       }
 
-      // ========================================================
-      // EXIT-INTENT PURO: Dispara quando a pessoa tenta sair da tela
-      // ========================================================
-      let exitFired = false;
+      // =========================================================================
+      // GATILHOS INTELIGENTES DO POPUP DE 10% DE DESCONTO
+      // (1. Temporizador de 2 minutos OU 2. Rolar até os planos OU 3. Tentar sair)
+      // =========================================================================
+      let popupShown = false;
+      const pageLoadTime = Date.now();
+      const MIN_ENGAGEMENT_MS = 20000; // 20 segundos mínimos de navegação antes de permitir exit-intent (evita abrir na entrada)
 
-      function triggerExitIntent() {
-        if (!exitFired && !sessionStorage.getItem('atlas_promo_dismissed')) {
-          exitFired = true;
-          openModal();
+      function canShowPopup() {
+        return !popupShown && !sessionStorage.getItem('atlas_promo_dismissed') && overlay && !overlay.classList.contains('is-active');
+      }
+
+      function triggerPopup(reason) {
+        if (!canShowPopup()) return;
+        popupShown = true;
+        openModal();
+        if (typeof fbq === 'function') {
+          fbq('trackCustom', 'PromoPopupTriggered', { trigger: reason });
         }
       }
 
-      // 1. DESKTOP: Dispara quando o mouse se move em direção ao topo da janela (fechar aba / trocar URL)
+      // GATILHO 1: TEMPO DE NAVEGAÇÃO (2 MINUTOS = 120 segundos)
+      setTimeout(function() {
+        triggerPopup('time_2min');
+      }, 120000);
+
+      // GATILHO 2: AO IR PARA A PARTE DE PLANOS (#planos)
+      function setupPlansObserver() {
+        const plansEl = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
+        if (!plansEl) {
+          setTimeout(setupPlansObserver, 500);
+          return;
+        }
+
+        if ('IntersectionObserver' in window) {
+          let plansTimer = null;
+          const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              if (entry.isIntersecting) {
+                // Usuário chegou na seção de planos. Aguarda 3.5 segundos de leitura e oferece o cupom de 10%
+                if (!plansTimer && canShowPopup()) {
+                  plansTimer = setTimeout(function() {
+                    triggerPopup('viewed_plans');
+                  }, 3500);
+                }
+              } else {
+                if (plansTimer) {
+                  clearTimeout(plansTimer);
+                  plansTimer = null;
+                }
+              }
+            });
+          }, { threshold: 0.25 });
+          observer.observe(plansEl);
+        }
+      }
+      setupPlansObserver();
+
+      // GATILHO 3: AO TENTAR SAIR DA TELA (EXIT-INTENT COM PROTEÇÃO ANTI-ENTRADA)
+      // 3.1. Desktop: mouseleave no topo (somente após pelo menos 20 segundos de navegação)
       document.addEventListener('mouseleave', function(e) {
-        if (e.clientY <= 25) {
-          triggerExitIntent();
+        if (Date.now() - pageLoadTime < MIN_ENGAGEMENT_MS) return; // Nunca dispara se acabou de entrar
+        if (e.clientY <= 15) {
+          triggerPopup('exit_desktop');
         }
       });
 
-      // 2. MOBILE: Intercepta o botão "Voltar" do navegador (Salvamento de Tráfego Mobile)
-      try {
-        window.history.pushState({ page: 'atlas_offer' }, '', '');
-        window.addEventListener('popstate', function(e) {
-          if (!sessionStorage.getItem('atlas_promo_dismissed') && !exitFired) {
-            triggerExitIntent();
-            window.history.pushState({ page: 'atlas_offer' }, '', '');
-          }
-        });
-      } catch (err) {}
+      // 3.2. Mobile: interceptação do botão Voltar após tempo mínimo de navegação
+      setTimeout(function() {
+        try {
+          window.history.pushState({ page: 'atlas_offer' }, '', '');
+          window.addEventListener('popstate', function(e) {
+            if (canShowPopup() && (Date.now() - pageLoadTime >= MIN_ENGAGEMENT_MS)) {
+              triggerPopup('exit_mobile_back');
+              window.history.pushState({ page: 'atlas_offer' }, '', '');
+            }
+          });
+        } catch (err) {}
+      }, 5000);
 
       // Fechar no botão X
       if (closeBtn) {
