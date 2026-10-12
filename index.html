@@ -574,16 +574,78 @@
         }, 1000);
       }
 
-      // Rastrear InitiateCheckout nos links de compra da Lowify ao clicar na tabela de planos
+      // =========================================================================
+      // FORÇAR REDIRECIONAMENTO COM DETECTOR E DESPACHO GARANTIDO DO META PIXEL
+      // =========================================================================
+      
+      // 1. Interceptar TODOS os cliques em botões de checkout (Lowify)
       document.addEventListener('click', function(e) {
-        const link = e.target.closest('a[href*="pay.lowify.com.br"]');
-        if (link && typeof fbq === 'function') {
+        const link = e.target.closest('a[href*="lowify"], a[href*="checkout"]');
+        if (!link) return;
+
+        let targetUrl = link.getAttribute('href');
+        if (!targetUrl || targetUrl.startsWith('#') || targetUrl.startsWith('javascript:')) return;
+
+        // Força a interceptação: impede a saída imediata para dar tempo do pixel registrar
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Preservação e enriquecimento total de UTMs e parâmetros da URL
+        try {
+          const currentParams = new URLSearchParams(window.location.search);
+          const destUrlObj = new URL(targetUrl, window.location.origin);
+          
+          for (const [key, value] of currentParams.entries()) {
+            if (!destUrlObj.searchParams.has(key)) {
+              destUrlObj.searchParams.set(key, value);
+            }
+          }
+          targetUrl = destUrlObj.href;
+        } catch(err) {}
+
+        const isBasic = targetUrl.includes('gW741H');
+        const planName = isBasic ? 'Atlas Visual do Pizzaiolo - Plano Básico' : 'Atlas Visual do Pizzaiolo - Plano Completo';
+        const planPrice = isBasic ? 10.00 : 27.90;
+
+        // Disparo forçado do Pixel
+        if (typeof fbq === 'function') {
           fbq('track', 'InitiateCheckout', {
-            content_name: 'Atlas Visual do Pizzaiolo',
-            currency: 'BRL'
+            content_name: planName,
+            content_category: 'Infoproduto',
+            value: planPrice,
+            currency: 'BRL',
+            num_items: 1
           });
         }
-      });
+
+        // Feedback visual suave de processamento no botão
+        link.style.opacity = '0.75';
+        link.style.pointerEvents = 'none';
+
+        // Redirecionamento seguro após folga de telemetria (220ms) garantindo despacho do pacote HTTP
+        let navigated = false;
+        const proceed = function() {
+          if (navigated) return;
+          navigated = true;
+          window.location.href = targetUrl;
+        };
+
+        setTimeout(proceed, 220);
+      }, true); // capture: true garante que intercepta antes de qualquer outro handler
+
+      // 2. Interceptar cliques em CTAs internos para mapear engajamento no Pixel
+      document.addEventListener('click', function(e) {
+        const ctaBtn = e.target.closest('.cta, a[href="#planos"], button');
+        if (!ctaBtn || ctaBtn.closest('.promo-card') || (ctaBtn.getAttribute('href') && ctaBtn.getAttribute('href').includes('lowify'))) return;
+        
+        const btnText = (ctaBtn.innerText || ctaBtn.textContent || '').trim().replace(/\s+/g, ' ');
+        if (btnText && typeof fbq === 'function') {
+          fbq('trackCustom', 'CtaClick', {
+            cta_text: btnText.slice(0, 50),
+            page_location: window.location.pathname
+          });
+        }
+      }, true);
     })();
   </script>
 </body>
