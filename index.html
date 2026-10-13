@@ -26,10 +26,17 @@
 
   <link rel="preload" href="fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="preload" href="fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin="">
-  <script type="module" src="js/index-DNWL92KJ.js?v=3"></script>
+  <script type="module" src="js/index-DNWL92KJ.js?v=4"></script>
   <link rel="stylesheet" crossorigin="" href="css/index-1fLfzhHh.css">
 
   <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    #planos {
+      scroll-margin-top: 64px;
+    }
+
     /* ===================================================
        POPUP DE PROMOÇÃO / DESCONTO 10% (CRO & RESPOSTA DIRETA)
        =================================================== */
@@ -441,6 +448,40 @@
         }
       }
 
+      // Funcao de rolagem suave e redirecionamento para a secao dos planos
+      function scrollToPlans(e, ctaElement) {
+        if (e && typeof e.preventDefault === 'function') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        const plansSection = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
+        if (plansSection) {
+          const headerOffset = 64; // Compensacao da barra de urgencia fixa no topo
+          const elementPosition = plansSection.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+
+          if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', '#planos');
+          }
+        }
+
+        // Rastreamento no Meta Pixel
+        if (typeof fbq === 'function') {
+          const btnText = ctaElement ? (ctaElement.innerText || ctaElement.textContent || '').trim().replace(/\s+/g, ' ') : 'CTA Conhecer Planos';
+          fbq('trackCustom', 'CtaClick', {
+            cta_text: btnText.slice(0, 50),
+            target: '#planos',
+            page_location: window.location.pathname
+          });
+        }
+      }
+
       // Função central: copia o código, fecha o modal e rola suavemente até a seção dos planos
       function copyCodeAndGoToPlans() {
         // 1. Copia o código para a área de transferência
@@ -474,10 +515,7 @@
 
         // 5. Rola suavemente até a seção dos planos (sem sair da página)
         setTimeout(function() {
-          const target = document.getElementById('planos') || document.querySelector('[data-section="plans"]');
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
+          scrollToPlans(null, ctaBtn);
         }, 140);
 
         // 6. Rastreia evento no Meta Pixel
@@ -683,17 +721,34 @@
         setTimeout(proceed, 220);
       }, true); // capture: true garante que intercepta antes de qualquer outro handler
 
-      // 2. Interceptar cliques em CTAs internos para mapear engajamento no Pixel
+      // 2. Interceptar cliques em CTAs internos para redirecionar suavemente aos planos e registrar evento no Pixel
       document.addEventListener('click', function(e) {
-        const ctaBtn = e.target.closest('.cta, a[href="#planos"], button');
-        if (!ctaBtn || ctaBtn.closest('.promo-card') || (ctaBtn.getAttribute('href') && ctaBtn.getAttribute('href').includes('lowify'))) return;
-        
-        const btnText = (ctaBtn.innerText || ctaBtn.textContent || '').trim().replace(/\s+/g, ' ');
-        if (btnText && typeof fbq === 'function') {
-          fbq('trackCustom', 'CtaClick', {
-            cta_text: btnText.slice(0, 50),
-            page_location: window.location.pathname
-          });
+        // Ignora cliques que ocorrem dentro do card do popup de cupom
+        if (e.target.closest('.promo-card')) return;
+
+        // Se for checkout da Lowify, ja e interceptado pelo handler 1
+        const checkoutLink = e.target.closest('a[href*="lowify"], a[href*="checkout"]');
+        if (checkoutLink) return;
+
+        // Identifica cliques em CTAs ou links apontando para os planos
+        const ctaBtn = e.target.closest('.cta, a[href="#planos"], a[href*="#planos"]');
+        if (!ctaBtn) return;
+
+        // Se for o botao do Plano Basico (que abre o modal de upgrade), preserva o onClick do React
+        if (ctaBtn.tagName === 'BUTTON' && ctaBtn.closest('.basic')) {
+          if (typeof fbq === 'function') {
+            fbq('trackCustom', 'CtaClick', { cta_text: 'QUERO SOMENTE O PLANO BÁSICO', target: 'modal_upgrade' });
+          }
+          return;
+        }
+
+        const href = ctaBtn.getAttribute('href') || '';
+        const isIntermediate = !!ctaBtn.closest('.intermediate');
+        const isHero = !!ctaBtn.closest('.hero');
+        const isFinal = !!ctaBtn.closest('.finalCta');
+
+        if (href === '#planos' || href.includes('#planos') || isIntermediate || isHero || isFinal) {
+          scrollToPlans(e, ctaBtn);
         }
       }, true);
     })();
