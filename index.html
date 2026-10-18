@@ -108,17 +108,77 @@
     }
 
     .vsl-player-box iframe {
-      width: 100%;
-      height: 100%;
       border: 0;
       position: absolute;
-      inset: 0;
     }
 
     .vsl-player-box.is-shorts iframe {
-      transform: scale(1.24);
-      transform-origin: center center;
+      width: 100% !important;
+      height: 132% !important;
+      top: -8% !important;
+      left: 0 !important;
+      transform: scale(1.36);
+      transform-origin: center 32%;
       pointer-events: none; /* Impede cliques diretos no iframe para nao abrir o YouTube */
+    }
+
+    /* Vinhetas e tarjas protetoras anti-marca/logos de terceiros */
+    .vsl-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 42px;
+      background: linear-gradient(to bottom, rgba(13, 12, 11, 0.75) 0%, transparent 100%);
+      z-index: 12;
+      pointer-events: none;
+    }
+
+    .vsl-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: linear-gradient(to top, #0d0c0b 35%, rgba(13, 12, 11, 0.88) 75%, transparent 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 12px;
+      z-index: 12;
+      pointer-events: none;
+    }
+
+    .vsl-bottom-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffe6a3;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(23, 18, 15, 0.9);
+      border: 1px solid rgba(217, 154, 55, 0.45);
+      padding: 5px 14px;
+      border-radius: 100px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .vsl-bottom-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #27ae60;
+      box-shadow: 0 0 8px #27ae60;
+      animation: vslLivePulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes vslLivePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.8); }
     }
 
     /* Camada protetora transparente para controlar a reproducao localmente */
@@ -981,6 +1041,9 @@
               <!-- Poster nativo em alta definicao (zero tela preta ou atraso visual) -->
               <img src="./assets/vsl-thumb.webp" id="vslPosterImg" alt="Demonstração do Atlas Visual do Pizzaiolo" width="380" height="638" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;pointer-events:none;transition:opacity 0.35s ease;">
 
+              <!-- Vinheta superior anti-marca/logos -->
+              <div class="vsl-top-bar"></div>
+
               <!-- Overlay pulsante de Ativar Som -->
               <div class="vsl-unmute-overlay" id="vslUnmuteOverlay">
                 <div class="vsl-unmute-pill">
@@ -994,6 +1057,14 @@
 
               <!-- Escudo de clique transparente: bloqueia saida para o YouTube e controla play/pause -->
               <div class="vsl-click-shield" id="vslClickShield" title="Clique para reproduzir / pausar"></div>
+
+              <!-- Tarja e selo inferior oficial blindando 100% do rodape contra canal/nome/logos -->
+              <div class="vsl-bottom-bar">
+                <span class="vsl-bottom-tag">
+                  <span class="vsl-bottom-dot"></span>
+                  +100 FICHAS DE MONTAGEM
+                </span>
+              </div>
 
               <!-- Container dinâmico do Iframe com carregamento diferido -->
               <div id="ytEmbedHolder" style="width:100%;height:100%;position:absolute;inset:0;z-index:1;"></div>
@@ -1021,7 +1092,7 @@
           iframeEl.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
           iframeEl.allowFullscreen = true;
           iframeEl.loading = 'lazy';
-          iframeEl.style.cssText = 'width:100%;height:100%;border:0;position:absolute;inset:0;';
+          iframeEl.style.cssText = 'border:0;position:absolute;width:100%;height:132%;top:-8%;left:0;';
 
           iframeEl.onload = function() {
             const poster = document.getElementById('vslPosterImg');
