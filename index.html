@@ -26,7 +26,7 @@
 
   <link rel="preload" href="fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="preload" href="fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin="">
-  <script type="module" src="js/index-DNWL92KJ.js?v=4"></script>
+  <script type="module" src="js/index-DNWL92KJ.js?v=5"></script>
   <link rel="stylesheet" crossorigin="" href="css/index-1fLfzhHh.css">
 
   <style>
@@ -35,6 +35,167 @@
     }
     #planos {
       scroll-margin-top: 64px;
+    }
+
+    /* ===================================================
+       VSL PLAYER COM SMART AUTOPLAY & CRO DIRECT RESPONSE
+       =================================================== */
+    .hero-vsl-slot {
+      width: 100%;
+      margin: 18px auto 26px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .vsl-wrapper {
+      width: 100%;
+      max-width: 620px;
+      position: relative;
+    }
+
+    .vsl-player-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #0d0c0b;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid rgba(217, 154, 55, 0.45);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55), 0 0 35px rgba(217, 154, 55, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .vsl-player-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    .vsl-player-box iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Overlay de Desmutar com Smart Autoplay */
+    .vsl-unmute-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      transition: opacity 280ms ease, visibility 280ms ease;
+    }
+
+    .vsl-unmute-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .vsl-unmute-pill {
+      background: linear-gradient(135deg, #c5241a 0%, #e5392d 100%);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 100px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(197, 36, 26, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      animation: vslPulse 1.9s infinite ease-in-out;
+      transform-origin: center;
+      user-select: none;
+    }
+
+    @keyframes vslPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.045); box-shadow: 0 14px 38px rgba(197, 36, 26, 0.8), 0 0 0 5px rgba(255, 255, 255, 0.35); }
+    }
+
+    .vsl-unmute-icon {
+      font-size: 1.55rem;
+      line-height: 1;
+      animation: soundShake 1.2s infinite ease-in-out;
+      display: inline-block;
+    }
+
+    @keyframes soundShake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-8deg); }
+      40% { transform: rotate(8deg); }
+      60% { transform: rotate(-5deg); }
+      80% { transform: rotate(5deg); }
+    }
+
+    .vsl-unmute-text {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .vsl-unmute-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ffe6a3;
+    }
+
+    .vsl-unmute-sub {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    /* Barra de progresso visual */
+    .vsl-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 10;
+    }
+
+    .vsl-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #d99a37, #c5241a);
+      transition: width 0.15s linear;
+    }
+
+    @media (max-width: 480px) {
+      .hero-vsl-slot {
+        margin: 14px auto 20px;
+      }
+      .vsl-unmute-pill {
+        padding: 10px 18px;
+        gap: 9px;
+      }
+      .vsl-unmute-icon {
+        font-size: 1.3rem;
+      }
+      .vsl-unmute-badge {
+        font-size: 0.64rem;
+      }
+      .vsl-unmute-sub {
+        font-size: 0.82rem;
+      }
     }
 
     /* ===================================================
@@ -751,6 +912,169 @@
           scrollToPlans(e, ctaBtn);
         }
       }, true);
+
+      // =========================================================================
+      // GERENCIADOR DA VSL (SMART AUTOPLAY COM CLIQUE PARA ATIVAR SOM + TELEMETRIA)
+      // =========================================================================
+      function initVslPlayer() {
+        const slot = document.getElementById('heroVslSlot');
+        if (!slot) {
+          setTimeout(initVslPlayer, 60);
+          return;
+        }
+
+        if (slot.dataset.vslInitialized) return;
+        slot.dataset.vslInitialized = 'true';
+
+        // Configuracao global customizavel
+        const config = window.VSL_CONFIG || {
+          type: 'video', // 'video' | 'youtube' | 'vimeo' | 'pandavideo' | 'vturb' | 'embed'
+          src: './assets/vsl.mp4',
+          poster: './assets/hero-produto.webp'
+        };
+
+        // Suporte a YouTube
+        if (config.type === 'youtube' && config.youtubeId) {
+          slot.innerHTML = `
+            <div class="vsl-wrapper">
+              <div class="vsl-player-box">
+                <iframe 
+                  src="https://www.youtube.com/embed/${config.youtubeId}?autoplay=1&mute=1&enablejsapi=1&rel=0&modestbranding=1" 
+                  title="Apresentação Atlas Visual do Pizzaiolo" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Suporte a Embed customizado (Panda Video, VTurb, etc.)
+        if (config.type === 'embed' && config.embedHtml) {
+          slot.innerHTML = `
+            <div class="vsl-wrapper">
+              <div class="vsl-player-box">
+                ${config.embedHtml}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Caso padrao: Player HTML5 nativo de Resposta Direta com Smart Autoplay
+        slot.innerHTML = `
+          <div class="vsl-wrapper" id="vslPlayerWrapper">
+            <div class="vsl-player-box" id="vslPlayerBox">
+              <div class="vsl-unmute-overlay" id="vslUnmuteOverlay">
+                <div class="vsl-unmute-pill">
+                  <span class="vsl-unmute-icon">🔊</span>
+                  <div class="vsl-unmute-text">
+                    <span class="vsl-unmute-badge">SEU VÍDEO JÁ COMEÇOU!</span>
+                    <span class="vsl-unmute-sub">Clique para ativar o som 🔈</span>
+                  </div>
+                </div>
+              </div>
+
+              <video
+                id="vslVideo"
+                src="${config.src}"
+                poster="${config.poster}"
+                autoplay
+                muted
+                playsinline
+                loop
+                preload="auto">
+              </video>
+
+              <div class="vsl-progress-bar">
+                <div class="vsl-progress-fill" id="vslProgressFill"></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const video = document.getElementById('vslVideo');
+        const overlay = document.getElementById('vslUnmuteOverlay');
+        const fill = document.getElementById('vslProgressFill');
+        let hasUnmuted = false;
+
+        if (video) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              if (typeof fbq === 'function') {
+                fbq('trackCustom', 'VslAutoplayStarted', { video: config.src });
+              }
+            }).catch(() => {
+              const startOnInteraction = () => {
+                video.play();
+                window.removeEventListener('touchstart', startOnInteraction);
+                window.removeEventListener('click', startOnInteraction);
+                window.removeEventListener('scroll', startOnInteraction);
+              };
+              window.addEventListener('touchstart', startOnInteraction, { once: true });
+              window.addEventListener('click', startOnInteraction, { once: true });
+              window.addEventListener('scroll', startOnInteraction, { once: true });
+            });
+          }
+
+          function toggleSoundOrPlay() {
+            if (!hasUnmuted) {
+              hasUnmuted = true;
+              video.muted = false;
+              video.volume = 1.0;
+              video.currentTime = 0;
+              video.play();
+              if (overlay) overlay.classList.add('is-hidden');
+
+              if (typeof fbq === 'function') {
+                fbq('trackCustom', 'VslUnmuted', { video: config.src });
+              }
+            } else {
+              if (video.paused) {
+                video.play();
+              } else {
+                video.pause();
+              }
+            }
+          }
+
+          if (overlay) {
+            overlay.addEventListener('click', function(e) {
+              e.stopPropagation();
+              toggleSoundOrPlay();
+            });
+          }
+
+          video.addEventListener('click', toggleSoundOrPlay);
+
+          video.addEventListener('timeupdate', function() {
+            if (video.duration && fill) {
+              const pct = (video.currentTime / video.duration) * 100;
+              fill.style.width = pct + '%';
+            }
+          });
+
+          const milestones = { 25: false, 50: false, 75: false, 95: false };
+          video.addEventListener('timeupdate', function() {
+            if (!video.duration || typeof fbq !== 'function') return;
+            const progress = (video.currentTime / video.duration) * 100;
+            for (const m of [25, 50, 75, 95]) {
+              if (progress >= m && !milestones[m]) {
+                milestones[m] = true;
+                fbq('trackCustom', `VslWatch_${m}`, { video: config.src });
+              }
+            }
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initVslPlayer);
+      } else {
+        initVslPlayer();
+      }
     })();
   </script>
 </body>
