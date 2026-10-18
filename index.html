@@ -96,6 +96,21 @@
       inset: 0;
     }
 
+    .vsl-player-box.is-shorts iframe {
+      transform: scale(1.24);
+      transform-origin: center center;
+      pointer-events: none; /* Impede cliques diretos no iframe para nao abrir o YouTube */
+    }
+
+    /* Camada protetora transparente para controlar a reproducao localmente */
+    .vsl-click-shield {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      cursor: pointer;
+      background: transparent;
+    }
+
     /* Overlay de Desmutar com Smart Autoplay */
     .vsl-unmute-overlay {
       position: absolute;
@@ -954,10 +969,13 @@
                 </div>
               </div>
 
-              <!-- Iframe otimizado do YouTube com autoplay e sem recomendacoes externas -->
+              <!-- Camada transparente que intercepta cliques (impede abrir o YouTube e controla reproducao) -->
+              <div class="vsl-click-shield" id="vslClickShield" title="Clique para reproduzir / pausar"></div>
+
+              <!-- Iframe otimizado do YouTube: sem controles, sem legendas, com zoom para mascarar logos -->
               <iframe
                 id="ytVslIframe"
-                src="https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&controls=1&enablejsapi=1"
+                src="https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&cc_lang_pref=off&hl=pt-BR&enablejsapi=1"
                 title="Atlas Visual do Pizzaiolo — VSL"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen
@@ -969,40 +987,75 @@
         `;
 
         const overlay = document.getElementById('vslUnmuteOverlay');
+        const shield = document.getElementById('vslClickShield');
         const iframe = document.getElementById('ytVslIframe');
         let hasUnmuted = false;
+        let isPlaying = true;
 
         // Dispara evento de inicio de reproducao no Meta Pixel
         if (typeof fbq === 'function') {
           fbq('trackCustom', 'VslAutoplayStarted', { video_id: youtubeId });
         }
 
-        // Funcao para desmutar e reiniciar com som a 100%
-        function handleUnmute() {
-          if (hasUnmuted) return;
-          hasUnmuted = true;
-
-          if (overlay) {
-            overlay.classList.add('is-hidden');
-          }
-
-          // Envia comandos via postMessage da YouTube API para desmutar e voltar ao inicio
+        // Desativa legendas assim que o iframe carrega
+        function stripCaptions() {
           if (iframe && iframe.contentWindow) {
             try {
-              iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-              iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
-              iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
-              iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"unloadModule","args":["captions"]}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"setOption","args":["captions","track",{}]}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"setOption","args":["captions","fontSize",-1]}', '*');
             } catch (err) {}
           }
+        }
 
-          if (typeof fbq === 'function') {
-            fbq('trackCustom', 'VslUnmuted', { video_id: youtubeId });
+        setTimeout(stripCaptions, 1200);
+        setTimeout(stripCaptions, 2500);
+
+        // Funcao para desmutar e reiniciar com som a 100%
+        function handleUnmute() {
+          if (!hasUnmuted) {
+            hasUnmuted = true;
+
+            if (overlay) {
+              overlay.classList.add('is-hidden');
+            }
+
+            // Envia comandos via postMessage da YouTube API para desmutar, desativar legendas e voltar ao inicio
+            if (iframe && iframe.contentWindow) {
+              try {
+                iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
+                iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
+                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                stripCaptions();
+              } catch (err) {}
+            }
+
+            if (typeof fbq === 'function') {
+              fbq('trackCustom', 'VslUnmuted', { video_id: youtubeId });
+            }
+          } else {
+            // Se ja desmutou, alternar play / pause localmente
+            if (iframe && iframe.contentWindow) {
+              try {
+                if (isPlaying) {
+                  iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                  isPlaying = false;
+                } else {
+                  iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                  isPlaying = true;
+                }
+              } catch (err) {}
+            }
           }
         }
 
         if (overlay) {
           overlay.addEventListener('click', handleUnmute);
+        }
+
+        if (shield) {
+          shield.addEventListener('click', handleUnmute);
         }
       }
 
