@@ -38,7 +38,7 @@
 
   <link rel="preload" href="fonts/Poppins-Regular.woff2" as="font" type="font/woff2" crossorigin="">
   <link rel="preload" href="fonts/Poppins-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="">
-  <script type="module" src="js/index-DNWL92KJ.js?v=7"></script>
+  <script type="module" src="js/index-DNWL92KJ.js?v=8"></script>
   
 
   <style>
@@ -1176,11 +1176,29 @@
         if (shield) shield.addEventListener('click', handleUnmute);
       }
 
+      function updateUrgencyDate() {
+        try {
+          const d = new Date();
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const dateStr = `${day}/${month}`;
+          const el = document.querySelector('.urgency strong');
+          if (el && !el.textContent.includes(dateStr)) {
+            el.textContent = `OFERTA EXCLUSIVA APENAS HOJE (${dateStr})`;
+          }
+        } catch(e) {}
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initVslPlayer);
+        document.addEventListener('DOMContentLoaded', function() {
+          initVslPlayer();
+          updateUrgencyDate();
+        });
       } else {
         initVslPlayer();
+        updateUrgencyDate();
       }
+      setInterval(updateUrgencyDate, 1000);
     })();
   </script>
 </body>
