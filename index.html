@@ -53,6 +53,10 @@
       position: relative;
     }
 
+    .vsl-wrapper.is-shorts {
+      max-width: 380px;
+    }
+
     .vsl-player-box {
       position: relative;
       width: 100%;
@@ -66,6 +70,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+    }
+
+    .vsl-player-box.is-shorts {
+      aspect-ratio: 9 / 16;
+      max-height: 670px;
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(217, 154, 55, 0.22);
+      border: 2.5px solid rgba(217, 154, 55, 0.55);
     }
 
     .vsl-player-box video {
@@ -914,7 +926,7 @@
       }, true);
 
       // =========================================================================
-      // GERENCIADOR DA VSL (SMART AUTOPLAY COM CLIQUE PARA ATIVAR SOM + TELEMETRIA)
+      // GERENCIADOR DA VSL (YOUTUBE SHORTS sovPKivo1WY COM SMART AUTOPLAY & DESMUTAR)
       // =========================================================================
       function initVslPlayer() {
         const slot = document.getElementById('heroVslSlot');
@@ -926,46 +938,12 @@
         if (slot.dataset.vslInitialized) return;
         slot.dataset.vslInitialized = 'true';
 
-        // Configuracao global customizavel
-        const config = window.VSL_CONFIG || {
-          type: 'video', // 'video' | 'youtube' | 'vimeo' | 'pandavideo' | 'vturb' | 'embed'
-          src: './assets/vsl.mp4',
-          poster: './assets/hero-produto.webp'
-        };
+        const youtubeId = 'sovPKivo1WY'; // Video oficial do Natan (+100 Fichas de Montagem de Pizzas)
 
-        // Suporte a YouTube
-        if (config.type === 'youtube' && config.youtubeId) {
-          slot.innerHTML = `
-            <div class="vsl-wrapper">
-              <div class="vsl-player-box">
-                <iframe 
-                  src="https://www.youtube.com/embed/${config.youtubeId}?autoplay=1&mute=1&enablejsapi=1&rel=0&modestbranding=1" 
-                  title="Apresentação Atlas Visual do Pizzaiolo" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  allowfullscreen>
-                </iframe>
-              </div>
-            </div>
-          `;
-          return;
-        }
-
-        // Suporte a Embed customizado (Panda Video, VTurb, etc.)
-        if (config.type === 'embed' && config.embedHtml) {
-          slot.innerHTML = `
-            <div class="vsl-wrapper">
-              <div class="vsl-player-box">
-                ${config.embedHtml}
-              </div>
-            </div>
-          `;
-          return;
-        }
-
-        // Caso padrao: Player HTML5 nativo de Resposta Direta com Smart Autoplay
         slot.innerHTML = `
-          <div class="vsl-wrapper" id="vslPlayerWrapper">
-            <div class="vsl-player-box" id="vslPlayerBox">
+          <div class="vsl-wrapper is-shorts" id="vslPlayerWrapper">
+            <div class="vsl-player-box is-shorts" id="vslPlayerBox">
+              <!-- Overlay pulsante de Ativar Som (Smart Autoplay Direct Response) -->
               <div class="vsl-unmute-overlay" id="vslUnmuteOverlay">
                 <div class="vsl-unmute-pill">
                   <span class="vsl-unmute-icon">🔊</span>
@@ -976,97 +954,55 @@
                 </div>
               </div>
 
-              <video
-                id="vslVideo"
-                src="${config.src}"
-                poster="${config.poster}"
-                autoplay
-                muted
-                playsinline
-                loop
-                preload="auto">
-              </video>
-
-              <div class="vsl-progress-bar">
-                <div class="vsl-progress-fill" id="vslProgressFill"></div>
-              </div>
+              <!-- Iframe otimizado do YouTube com autoplay e sem recomendacoes externas -->
+              <iframe
+                id="ytVslIframe"
+                src="https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&controls=1&enablejsapi=1"
+                title="Atlas Visual do Pizzaiolo — VSL"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                loading="eager"
+                style="width:100%;height:100%;border:0;position:absolute;inset:0;">
+              </iframe>
             </div>
           </div>
         `;
 
-        const video = document.getElementById('vslVideo');
         const overlay = document.getElementById('vslUnmuteOverlay');
-        const fill = document.getElementById('vslProgressFill');
+        const iframe = document.getElementById('ytVslIframe');
         let hasUnmuted = false;
 
-        if (video) {
-          const playPromise = video.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              if (typeof fbq === 'function') {
-                fbq('trackCustom', 'VslAutoplayStarted', { video: config.src });
-              }
-            }).catch(() => {
-              const startOnInteraction = () => {
-                video.play();
-                window.removeEventListener('touchstart', startOnInteraction);
-                window.removeEventListener('click', startOnInteraction);
-                window.removeEventListener('scroll', startOnInteraction);
-              };
-              window.addEventListener('touchstart', startOnInteraction, { once: true });
-              window.addEventListener('click', startOnInteraction, { once: true });
-              window.addEventListener('scroll', startOnInteraction, { once: true });
-            });
-          }
+        // Dispara evento de inicio de reproducao no Meta Pixel
+        if (typeof fbq === 'function') {
+          fbq('trackCustom', 'VslAutoplayStarted', { video_id: youtubeId });
+        }
 
-          function toggleSoundOrPlay() {
-            if (!hasUnmuted) {
-              hasUnmuted = true;
-              video.muted = false;
-              video.volume = 1.0;
-              video.currentTime = 0;
-              video.play();
-              if (overlay) overlay.classList.add('is-hidden');
-
-              if (typeof fbq === 'function') {
-                fbq('trackCustom', 'VslUnmuted', { video: config.src });
-              }
-            } else {
-              if (video.paused) {
-                video.play();
-              } else {
-                video.pause();
-              }
-            }
-          }
+        // Funcao para desmutar e reiniciar com som a 100%
+        function handleUnmute() {
+          if (hasUnmuted) return;
+          hasUnmuted = true;
 
           if (overlay) {
-            overlay.addEventListener('click', function(e) {
-              e.stopPropagation();
-              toggleSoundOrPlay();
-            });
+            overlay.classList.add('is-hidden');
           }
 
-          video.addEventListener('click', toggleSoundOrPlay);
+          // Envia comandos via postMessage da YouTube API para desmutar e voltar ao inicio
+          if (iframe && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
+              iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            } catch (err) {}
+          }
 
-          video.addEventListener('timeupdate', function() {
-            if (video.duration && fill) {
-              const pct = (video.currentTime / video.duration) * 100;
-              fill.style.width = pct + '%';
-            }
-          });
+          if (typeof fbq === 'function') {
+            fbq('trackCustom', 'VslUnmuted', { video_id: youtubeId });
+          }
+        }
 
-          const milestones = { 25: false, 50: false, 75: false, 95: false };
-          video.addEventListener('timeupdate', function() {
-            if (!video.duration || typeof fbq !== 'function') return;
-            const progress = (video.currentTime / video.duration) * 100;
-            for (const m of [25, 50, 75, 95]) {
-              if (progress >= m && !milestones[m]) {
-                milestones[m] = true;
-                fbq('trackCustom', `VslWatch_${m}`, { video: config.src });
-              }
-            }
-          });
+        if (overlay) {
+          overlay.addEventListener('click', handleUnmute);
         }
       }
 
