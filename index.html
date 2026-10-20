@@ -38,7 +38,7 @@
 
   <link rel="preload" href="fonts/Poppins-Regular.woff2" as="font" type="font/woff2" crossorigin="">
   <link rel="preload" href="fonts/Poppins-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="">
-  <script type="module" src="js/index-DNWL92KJ.js?v=8"></script>
+  <script type="module" src="js/index-DNWL92KJ.js?v=9"></script>
   
 
   <style>
@@ -935,7 +935,7 @@
       
       // 1. Interceptar TODOS os cliques em botões de checkout (Lowify)
       document.addEventListener('click', function(e) {
-        const link = e.target.closest('a[href*="lowify"], a[href*="checkout"]');
+        const link = e.target.closest('a[href*="cakto"], a[href*="lowify"], a[href*="checkout"], a[href*="pay."]');
         if (!link) return;
 
         let targetUrl = link.getAttribute('href');
@@ -958,9 +958,17 @@
           targetUrl = destUrlObj.href;
         } catch(err) {}
 
-        const isBasic = targetUrl.includes('gW741H');
-        const planName = isBasic ? 'Atlas Visual do Pizzaiolo - Plano Básico' : 'Atlas Visual do Pizzaiolo - Plano Completo';
-        const planPrice = isBasic ? 10.00 : 27.90;
+        const isBasic = targetUrl.includes('6ngi28b') || targetUrl.includes('gW741H');
+        const isUpgrade = targetUrl.includes('34woo2f');
+        let planName = 'Atlas Visual do Pizzaiolo - Plano Completo';
+        let planPrice = 27.90;
+        if (isBasic) {
+          planName = 'Atlas Visual do Pizzaiolo - Plano Básico';
+          planPrice = 10.00;
+        } else if (isUpgrade) {
+          planName = 'Atlas Visual do Pizzaiolo - Oferta Especial';
+          planPrice = 17.90;
+        }
 
         // Disparo forçado do Pixel
         if (typeof fbq === 'function') {
@@ -994,7 +1002,7 @@
         if (e.target.closest('.promo-card')) return;
 
         // Se for checkout da Lowify, ja e interceptado pelo handler 1
-        const checkoutLink = e.target.closest('a[href*="lowify"], a[href*="checkout"]');
+        const checkoutLink = e.target.closest('a[href*="cakto"], a[href*="lowify"], a[href*="checkout"], a[href*="pay."]');
         if (checkoutLink) return;
 
         // Identifica cliques em CTAs ou links apontando para os planos
